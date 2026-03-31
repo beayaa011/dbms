@@ -1,0 +1,98 @@
+Imports Oracle.ManagedDataAccess.Client
+Imports System.Data
+
+Public Class Form1
+
+    Dim con As New OracleConnection("User Id=system;Password=root;Data Source=localhost:1521/XE")
+
+    'LOAD DATA
+    Sub LoadData()
+        Dim da As New OracleDataAdapter("SELECT * FROM LIBRARY_ISSUE", con)
+        Dim dt As New DataTable
+        da.Fill(dt)
+        dgvLibrary.DataSource = dt
+    End Sub
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        LoadData()
+    End Sub
+
+    'SAVE
+    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+
+        con.Open()
+
+        Dim cmd As New OracleCommand("INSERT INTO LIBRARY_ISSUE VALUES(:id,:book,:mem,TO_DATE(:iss,'YYYY-MM-DD'),TO_DATE(:ret,'YYYY-MM-DD'))", con)
+
+        cmd.Parameters.Add(":id", txtIssueID.Text)
+        cmd.Parameters.Add(":book", txtBookName.Text)
+        cmd.Parameters.Add(":mem", txtMemberID.Text)
+        cmd.Parameters.Add(":iss", txtIssueDate.Text)
+        cmd.Parameters.Add(":ret", txtReturnDate.Text)
+
+        cmd.ExecuteNonQuery()
+
+        con.Close()
+
+        MessageBox.Show("Saved")
+
+        LoadData()
+
+    End Sub
+
+
+    'DELETE
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+
+        con.Open()
+
+        Dim cmd As New OracleCommand("DELETE FROM LIBRARY_ISSUE WHERE ISSUEID=:id", con)
+
+        cmd.Parameters.Add(":id", txtIssueID.Text)
+
+        cmd.ExecuteNonQuery()
+
+        con.Close()
+
+        MessageBox.Show("Deleted")
+
+        LoadData()
+
+    End Sub
+
+
+    'CLEAR
+    Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles btnClear.Click
+
+        txtIssueID.Clear()
+        txtBookName.Clear()
+        txtMemberID.Clear()
+        txtIssueDate.Clear()
+        txtReturnDate.Clear()
+
+    End Sub
+
+
+    'GRID CLICK
+    Private Sub dgvLibrary_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvLibrary.CellClick
+
+        txtIssueID.Text = dgvLibrary.CurrentRow.Cells(0).Value
+        txtBookName.Text = dgvLibrary.CurrentRow.Cells(1).Value
+        txtMemberID.Text = dgvLibrary.CurrentRow.Cells(2).Value
+        txtIssueDate.Text = dgvLibrary.CurrentRow.Cells(3).Value
+        txtReturnDate.Text = dgvLibrary.CurrentRow.Cells(4).Value
+
+    End Sub
+
+End Class
+
+
+sql code
+
+CREATE TABLE LIBRARY_ISSUE(
+ISSUEID NUMBER PRIMARY KEY,
+BOOKNAME VARCHAR2(100),
+MEMBERID NUMBER,
+ISSUEDATE DATE,
+RETURNDATE DATE
+);
