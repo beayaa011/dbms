@@ -1,0 +1,134 @@
+Imports Oracle.ManagedDataAccess.Client
+Imports System.Data
+
+Public Class Form1
+
+    Dim con As New OracleConnection("User Id=system;Password=root;Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))")
+
+    Sub LoadData()
+        Dim dt As New DataTable
+        Dim da As New OracleDataAdapter("SELECT * FROM PURCHASE", con)
+        da.Fill(dt)
+        dgvPurchase.DataSource = dt
+    End Sub
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        LoadData()
+    End Sub
+
+    'ADD / CLEAR
+    Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
+        txtPord.Clear()
+        txtName.Clear()
+        txtOdate.Clear()
+        txtPname.Clear()
+        txtRate.Clear()
+        txtQty.Clear()
+        txtAmt.Clear()
+    End Sub
+
+    'SAVE
+    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+        Try
+            Dim r As Decimal = If(txtRate.Text = "", 0, Val(txtRate.Text))
+            Dim q As Decimal = If(txtQty.Text = "", 0, Val(txtQty.Text))
+            Dim a As Decimal = r * q
+
+            txtAmt.Text = a.ToString()
+
+            If con.State = ConnectionState.Closed Then con.Open()
+
+            Dim cmd As New OracleCommand("INSERT INTO PURCHASE(PORD, NAME, ODATE, PNAME, RATE, QTY, AMT) VALUES(:o,:n,:d,:p,:r,:q,:a)", con)
+
+            cmd.Parameters.Add(":o", txtPord.Text)
+            cmd.Parameters.Add(":n", txtName.Text)
+            cmd.Parameters.Add(":d", OracleDbType.Date).Value = DateTime.Parse(txtOdate.Text)
+            cmd.Parameters.Add(":p", txtPname.Text)
+            cmd.Parameters.Add(":r", OracleDbType.Decimal).Value = r
+            cmd.Parameters.Add(":q", OracleDbType.Decimal).Value = q
+            cmd.Parameters.Add(":a", OracleDbType.Decimal).Value = a
+
+            cmd.ExecuteNonQuery()
+
+            MessageBox.Show("Saved Successfully!")
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+        Finally
+            con.Close()
+        End Try
+
+        LoadData()
+    End Sub
+
+    'UPDATE
+    Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+        Try
+            If con.State = ConnectionState.Closed Then con.Open()
+
+            Dim cmd As New OracleCommand("UPDATE PURCHASE SET NAME=:n, ODATE=:d, PNAME=:p, RATE=:r, QTY=:q, AMT=:a WHERE PORD=:o", con)
+
+            cmd.Parameters.Add(":n", txtName.Text)
+            cmd.Parameters.Add(":d", OracleDbType.Date).Value = DateTime.Parse(txtOdate.Text)
+            cmd.Parameters.Add(":p", txtPname.Text)
+            cmd.Parameters.Add(":r", OracleDbType.Decimal).Value = Val(txtRate.Text)
+            cmd.Parameters.Add(":q", OracleDbType.Decimal).Value = Val(txtQty.Text)
+            cmd.Parameters.Add(":a", OracleDbType.Decimal).Value = Val(txtAmt.Text)
+            cmd.Parameters.Add(":o", txtPord.Text)
+
+            cmd.ExecuteNonQuery()
+
+            MessageBox.Show("Updated Successfully!")
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+        Finally
+            con.Close()
+        End Try
+
+        LoadData()
+    End Sub
+
+    'DELETE
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+        Try
+            If con.State = ConnectionState.Closed Then con.Open()
+
+            Dim cmd As New OracleCommand("DELETE FROM PURCHASE WHERE PORD=:o", con)
+            cmd.Parameters.Add(":o", txtPord.Text)
+
+            cmd.ExecuteNonQuery()
+
+            MessageBox.Show("Deleted Successfully!")
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+        Finally
+            con.Close()
+        End Try
+
+        LoadData()
+    End Sub
+
+    'CLEAR + EXIT
+    Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles btnClear.Click
+        btnAdd.PerformClick()
+    End Sub
+
+    Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
+        Application.Exit()
+    End Sub
+
+End Class
+
+
+sql code
+CREATE TABLE PURCHASE (
+    PORD   VARCHAR2(10),
+    NAME   VARCHAR2(20),
+    ODATE  VARCHAR2(15),
+    PNAME  VARCHAR2(20),
+    RATE   NUMBER(5),
+    QTY    NUMBER(5),
+    AMT    NUMBER(10,2)
+);
