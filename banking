@@ -1,0 +1,99 @@
+
+Imports Oracle.ManagedDataAccess.Client
+Imports System.Data
+
+Public Class Form1
+
+    Dim con As New OracleConnection("User Id=system;Password=root;Data Source=localhost:1521/XE")
+
+    'LOAD GRID
+    Sub LoadData()
+        Dim da As New OracleDataAdapter("SELECT * FROM BANK", con)
+        Dim dt As New DataTable
+        da.Fill(dt)
+        dgvBank.DataSource = dt
+    End Sub
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        LoadData()
+    End Sub
+
+    'ADD / CLEAR
+    Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
+        txtAccNo.Clear() : txtAccTanNo.Clear() : txtName.Clear()
+        txtPrevBal.Clear() : txtAccType.Clear()
+        txtAmount.Clear() : txtDate.Clear() : txtCurrentBal.Clear()
+    End Sub
+
+    'SAVE
+    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+
+        Dim prev As Double = Val(txtPrevBal.Text)
+        Dim amt As Double = Val(txtAmount.Text)
+        Dim cur As Double
+
+        If rbDebit.Checked Then cur = prev - amt
+        If rbCredit.Checked Then cur = prev + amt
+
+        txtCurrentBal.Text = cur
+
+        con.Open()
+
+        Dim cmd As New OracleCommand("INSERT INTO BANK VALUES(:a,:id,:n,:p,:type,:amt,:d,:c)", con)
+
+        cmd.Parameters.Add(":a", txtAccNo.Text)
+        cmd.Parameters.Add(":id", txtAccTanNo.Text)   '✅ fixed (no Label)
+        cmd.Parameters.Add(":n", txtName.Text)
+        cmd.Parameters.Add(":p", txtPrevBal.Text)
+        cmd.Parameters.Add(":type", txtAccType.Text)
+        cmd.Parameters.Add(":amt", Val(txtAmount.Text))
+        cmd.Parameters.Add(":d", txtDate.Text)        '✅ no TO_DATE
+        cmd.Parameters.Add(":c", Val(txtCurrentBal.Text))
+
+        cmd.ExecuteNonQuery()
+
+        con.Close()
+        LoadData()
+
+    End Sub
+
+    'UPDATE
+    Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+
+        con.Open()
+
+        Dim cmd As New OracleCommand("UPDATE BANK SET CNAME=:n WHERE ACCNO=:a", con)
+
+        cmd.Parameters.Add(":n", txtName.Text)
+        cmd.Parameters.Add(":a", txtAccNo.Text)
+
+        cmd.ExecuteNonQuery()
+
+        con.Close()
+        LoadData()
+
+    End Sub
+
+    'CLEAR
+    Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles btnClear.Click
+        btnAdd.PerformClick()
+    End Sub
+
+    'EXIT
+    Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
+        Application.Exit()
+    End Sub
+
+End Class
+
+sql code
+CREATE TABLE BANK (
+    ACCNO     VARCHAR2(10) PRIMARY KEY,
+    ACID      VARCHAR2(20),
+    CNAME     VARCHAR2(20),
+    PBAL      VARCHAR2(20),
+    ACCTYPE   VARCHAR2(10),
+    AMT       NUMBER(10,2),
+    DAT       VARCHAR2(15),
+    CURBAL    NUMBER(12,2)
+);
