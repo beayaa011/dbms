@@ -1,0 +1,40 @@
+CREATE TABLE Employee (
+ EmpNo NUMBER PRIMARY KEY,
+ Name VARCHAR2(50),
+ Department VARCHAR2(30),
+ Job_desig VARCHAR2(30),
+ DOJ DATE,
+ Basic NUMBER,
+ DA NUMBER,
+ HRA NUMBER,
+ Net_Salary NUMBER
+);
+
+
+INSERT INTO Employee VALUES (101,'Rahul','Finance','Accountant',SYSDATE,40000,5000,3000,48000);
+
+
+-- Accountant
+SELECT * FROM Employee WHERE Job_desig='Accountant';
+
+-- Net Salary > 80000
+SELECT Name FROM Employee WHERE Net_Salary>80000;
+
+-- Months worked
+SELECT Name, MONTHS_BETWEEN(SYSDATE,DOJ) FROM Employee;
+
+
+CREATE OR REPLACE FUNCTION get_sal(eid NUMBER)
+RETURN NUMBER IS s NUMBER;
+BEGIN
+ SELECT Net_Salary INTO s FROM Employee WHERE EmpNo=eid;
+ RETURN s;
+END;
+/
+
+DECLARE s NUMBER;
+BEGIN
+ s := get_sal(101);
+ DBMS_OUTPUT.PUT_LINE(s);
+END;
+/
