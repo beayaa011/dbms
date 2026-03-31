@@ -1,0 +1,96 @@
+Imports Oracle.ManagedDataAccess.Client
+Imports System.Data
+
+Public Class Form1
+
+Dim con As New OracleConnection("User Id=system;Password=admin;Data Source=localhost:1521/XE")
+
+Sub LoadData()
+Dim da As New OracleDataAdapter("SELECT * FROM STUDENT_MARKS", con)
+Dim dt As New DataTable
+da.Fill(dt)
+dgvMarks.DataSource = dt
+End Sub
+
+'FORM LOAD
+Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+LoadData()
+End Sub
+
+'ADD / CLEAR
+Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
+txtRegNo.Clear() : txtName.Clear() : txtDOB.Clear()
+txtDSC.Clear() : txtDBMS.Clear() : txtAFM.Clear()
+txtCLAB.Clear() : txtRDBMSLAB.Clear()
+txtTotal.Clear() : txtAvg.Clear() : txtResult.Clear() : txtClass.Clear()
+End Sub
+
+'SAVE
+Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+
+Dim t As Integer = Val(txtDSC.Text) + Val(txtDBMS.Text) + Val(txtAFM.Text) + Val(txtCLAB.Text) + Val(txtRDBMSLAB.Text)
+
+txtTotal.Text = t : txtAvg.Text = t / 5
+If txtAvg.Text >= 50 Then txtResult.Text = "PASS" Else txtResult.Text = "FAIL"
+
+con.Open()
+
+Dim cmd As New OracleCommand("INSERT INTO STUDENT_MARKS VALUES(:r,:n,TO_DATE(:d,'YYYY-MM-DD'),:ds,:db,:af,:cl,:rl,:t,:a,:res,:c)", con)
+
+cmd.Parameters.Add(":r", txtRegNo.Text)
+cmd.Parameters.Add(":n", txtName.Text)
+cmd.Parameters.Add(":d", txtDOB.Text)
+cmd.Parameters.Add(":ds", txtDSC.Text)
+cmd.Parameters.Add(":db", txtDBMS.Text)
+cmd.Parameters.Add(":af", txtAFM.Text)
+cmd.Parameters.Add(":cl", txtCLAB.Text)
+cmd.Parameters.Add(":rl", txtRDBMSLAB.Text)
+cmd.Parameters.Add(":t", txtTotal.Text)
+cmd.Parameters.Add(":a", txtAvg.Text)
+cmd.Parameters.Add(":res", txtResult.Text)
+cmd.Parameters.Add(":c", txtClass.Text)
+
+cmd.ExecuteNonQuery() : con.Close() : LoadData()
+
+End Sub
+
+'UPDATE
+Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+con.Open()
+Dim cmd As New OracleCommand("UPDATE STUDENT_MARKS SET NAME=:n WHERE REGNO=:r", con)
+cmd.Parameters.Add(":n", txtName.Text)
+cmd.Parameters.Add(":r", txtRegNo.Text)
+cmd.ExecuteNonQuery() : con.Close() : LoadData()
+End Sub
+
+'DELETE
+Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+con.Open()
+Dim cmd As New OracleCommand("DELETE FROM STUDENT_MARKS WHERE REGNO=:r", con)
+cmd.Parameters.Add(":r", txtRegNo.Text)
+cmd.ExecuteNonQuery() : con.Close() : LoadData()
+End Sub
+
+'EXIT
+Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
+Application.Exit()
+End Sub
+
+End Class
+
+
+sql code
+CREATE TABLE STUDENT_MARKS(
+REGNO NUMBER PRIMARY KEY,
+NAME VARCHAR2(50),
+DOB DATE,
+DSC NUMBER,
+DBMS NUMBER,
+AF NUMBER,
+CLAB NUMBER,
+RDBMSLAB NUMBER,
+TOTAL NUMBER,
+AVG NUMBER,
+RESULT VARCHAR2(10),
+CLASS VARCHAR2(20)
+);
