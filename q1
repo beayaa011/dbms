@@ -1,0 +1,17 @@
+CREATE OR REPLACE PROCEDURE display_students
+IS
+BEGIN
+   FOR rec IN (SELECT * FROM student) LOOP
+      dbms_output.put_line('Reg No: ' || rec.RegNo);
+      dbms_output.put_line('Name: ' || rec.Name);
+   END LOOP;
+END;
+/
+
+		
+
+set serverout on;
+BEGIN
+display_students;
+END;
+ /
