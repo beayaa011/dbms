@@ -1,0 +1,121 @@
+Imports Oracle.ManagedDataAccess.Client
+Imports System.Data
+
+Public Class Form1
+
+    Dim con As New OracleConnection("User Id=system;Password=root;Data Source=localhost:1521/XE")
+
+    Sub LoadData()
+        Dim da As New OracleDataAdapter("SELECT *  from  PAYROLL", con)
+        Dim dt As New DataTable
+        da.Fill(dt)
+        dgvPayroll.DataSource = dt
+    End Sub
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        LoadData()
+    End Sub
+
+    'ADD / CLEAR
+    Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
+        txtEmpNo.Clear() : txtName.Clear() : txtDesig.Clear() : txtDOJ.Clear()
+        txtBasic.Clear() : txtDA.Clear() : txtHRA.Clear() : txtCCA.Clear()
+        txtPF.Clear() : txtTax.Clear() : txtGross.Clear() : txtNet.Clear()
+    End Sub
+
+    'SAVE
+    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+
+        Try
+
+            Dim b As Decimal = If(txtBasic.Text = "", 0, Convert.ToDecimal(txtBasic.Text))
+            Dim da As Decimal = If(txtDA.Text = "", 0, Convert.ToDecimal(txtDA.Text))
+            Dim h As Decimal = If(txtHRA.Text = "", 0, Convert.ToDecimal(txtHRA.Text))
+            Dim c As Decimal = If(txtCCA.Text = "", 0, Convert.ToDecimal(txtCCA.Text))
+            Dim pf As Decimal = If(txtPF.Text = "", 0, Convert.ToDecimal(txtPF.Text))
+            Dim t As Decimal = If(txtTax.Text = "", 0, Convert.ToDecimal(txtTax.Text))
+
+            Dim g As Decimal = b + da + h + c
+            Dim n As Decimal = g - (pf + t)
+
+            txtGross.Text = g : txtNet.Text = n
+
+            con.Open()
+
+            Dim cmd As New OracleCommand("INSERT INTO PAYROLL VALUES(:e,:n,:d,:doj,:b,:da,:h,:c,:pf,:t,:g,:net)", con)
+
+            cmd.Parameters.Add(":e", txtEmpNo.Text)
+            cmd.Parameters.Add(":n", txtName.Text)
+            cmd.Parameters.Add(":d", txtDesig.Text)
+            cmd.Parameters.Add(":doj", txtDOJ.Text)
+
+            cmd.Parameters.Add(":b", OracleDbType.Decimal).Value = b
+            cmd.Parameters.Add(":da", OracleDbType.Decimal).Value = da
+            cmd.Parameters.Add(":h", OracleDbType.Decimal).Value = h
+            cmd.Parameters.Add(":c", OracleDbType.Decimal).Value = c
+            cmd.Parameters.Add(":pf", OracleDbType.Decimal).Value = pf
+            cmd.Parameters.Add(":t", OracleDbType.Decimal).Value = t
+            cmd.Parameters.Add(":g", OracleDbType.Decimal).Value = g
+            cmd.Parameters.Add(":net", OracleDbType.Decimal).Value = n
+
+            cmd.ExecuteNonQuery()
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        Finally
+            con.Close()
+        End Try
+
+        LoadData()
+
+    End Sub
+
+    'UPDATE
+    Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+        con.Open()
+        Dim cmd As New OracleCommand("UPDATE PAYROLL SET NAME=:n WHERE EMPNO=:e", con)
+        cmd.Parameters.Add(":n", txtName.Text)
+        cmd.Parameters.Add(":e", txtEmpNo.Text)
+        cmd.ExecuteNonQuery()
+        con.Close() : LoadData()
+    End Sub
+
+    'DELETE
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+        con.Open()
+        Dim cmd As New OracleCommand("DELETE FROM PAYROLL WHERE EMPNO=:e", con)
+        cmd.Parameters.Add(":e", txtEmpNo.Text)
+        cmd.ExecuteNonQuery()
+        con.Close() : LoadData()
+    End Sub
+
+    'CLEAR + EXIT
+    Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles btnClear.Click
+        btnAdd.PerformClick()
+    End Sub
+
+    Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
+        Application.Exit()
+    End Sub
+
+End Class
+
+
+
+
+sql code
+CREATE TABLE PAYROLL (
+    EMPNO   VARCHAR2(10) PRIMARY KEY,
+    NAME    VARCHAR2(20),
+    DESIG   VARCHAR2(8),
+    DOJ     VARCHAR2(18),
+    BASIC   NUMBER(12,2),
+    DA      NUMBER(10,2),
+    HRA     NUMBER(10,2),
+    CCA     NUMBER(10,2),
+    PF      NUMBER(10,2),
+    TAX     NUMBER(10,2),
+    GROSS   NUMBER(12,2),
+    NET     NUMBER(12,2)
+);
