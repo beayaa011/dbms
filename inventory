@@ -1,0 +1,111 @@
+Imports Oracle.ManagedDataAccess.Client
+Imports System.Data
+
+Public Class Form1
+
+    Dim con As New OracleConnection("User Id=system;Password=root;Data Source=localhost:1521/XE")
+
+    'LOAD GRID
+    Sub LoadData()
+        Dim da As New OracleDataAdapter("SELECT * FROM INV", con)
+        Dim dt As New DataTable
+        da.Fill(dt)
+        dgvInv.DataSource = Nothing
+        dgvInv.DataSource = dt
+    End Sub
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        LoadData()
+    End Sub
+
+    'ADD / CLEAR
+    Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
+        txtProId.Clear() : txtPDes.Clear() : txtQOH.Clear()
+        txtUPrice.Clear() : txtROL.Clear()
+        txtTCost.Clear() : txtTStock.Clear()
+    End Sub
+
+    'SAVE
+    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+
+        Try
+
+            Dim q As Integer = Val(txtQOH.Text)
+            Dim up As Decimal = If(txtUPrice.Text = "", 0, Convert.ToDecimal(txtUPrice.Text))
+            Dim rol As Integer = Val(txtROL.Text)
+
+            Dim cost As Decimal = q * up
+            Dim stock As Integer = q
+
+            txtTCost.Text = cost
+            txtTStock.Text = stock
+
+            con.Open()
+
+            Dim cmd As New OracleCommand("INSERT INTO INV VALUES(:id,:d,:q,:up,:rol,:c,:s)", con)
+
+            cmd.Parameters.Add(":id", txtProId.Text)
+            cmd.Parameters.Add(":d", txtPDes.Text)
+            cmd.Parameters.Add(":q", OracleDbType.Int32).Value = q
+            cmd.Parameters.Add(":up", txtUPrice.Text)   'VARCHAR in DB
+            cmd.Parameters.Add(":rol", OracleDbType.Int32).Value = rol
+            cmd.Parameters.Add(":c", OracleDbType.Decimal).Value = cost
+            cmd.Parameters.Add(":s", OracleDbType.Int32).Value = stock
+
+            cmd.ExecuteNonQuery()
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        Finally
+            con.Close()
+        End Try
+
+        LoadData()
+
+    End Sub
+
+    'UPDATE
+    Private Sub btnUpdate_Click(sender As Object, e As EventArgs) Handles btnUpdate.Click
+        con.Open()
+        Dim cmd As New OracleCommand("UPDATE INV SET PDES=:d WHERE PROID=:id", con)
+        cmd.Parameters.Add(":d", txtPDes.Text)
+        cmd.Parameters.Add(":id", txtProId.Text)
+        cmd.ExecuteNonQuery()
+        con.Close()
+        LoadData()
+    End Sub
+
+    'DELETE
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+        con.Open()
+        Dim cmd As New OracleCommand("DELETE FROM INV WHERE PROID=:id", con)
+        cmd.Parameters.Add(":id", txtProId.Text)
+        cmd.ExecuteNonQuery()
+        con.Close()
+        LoadData()
+    End Sub
+
+    'CLEAR + EXIT
+    Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles btnClear.Click
+        btnAdd.PerformClick()
+    End Sub
+
+    Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
+        Application.Exit()
+    End Sub
+
+End Class
+
+
+
+sql code
+CREATE TABLE INV (
+    PROID   VARCHAR2(10),
+    PDES    VARCHAR2(20),
+    QOH     NUMBER(5),
+    UPRICE  VARCHAR2(20),
+    ROL     NUMBER(5),
+    TCOST   NUMBER(10,2),
+    TSTOCK  NUMBER(5)
+);
